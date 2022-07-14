@@ -53,7 +53,7 @@ class Matrix:
 		else:
 			return random.randint(0, self.rows - 1), random.randint(0, self.columns -1)
 
-	def generate(self, max_empty_tiles):
+	def generate(self, max_empty_tiles, convert_to_image =False):
 		amount = max_empty_tiles
 		print(amount)
 		x, y = self.get_midway_position()
@@ -76,6 +76,9 @@ class Matrix:
 				count = 0
 			else:
 				x, y = self.get_new_position(x, y)
+		
+		if convert_to_image:
+			self.convert_to_img()
 
 	def show(self):
 		for row in self.matrix:
@@ -113,11 +116,9 @@ def convert_string_to_settings(settings):
 	return dict([[x.strip() for x in option.split("=")] for option in parsed_1])
 
 
-ROWS, COLUMNS, MAX, JUMP_BEFORE_WALK = range(4)
+ROWS, COLUMNS, MAX, JUMP_BEFORE_WALK, CONVERT = range(5)
 
 settings = [int(x) for x in sys.argv[1:]]
-print(settings)
 cave = Matrix(settings[ROWS], settings[COLUMNS])
 Matrix.MAX_WALK_BEFORE_JUMP = settings[JUMP_BEFORE_WALK]
-cave.generate(settings[MAX])
-cave.show()
+cave.generate(settings[MAX], settings[CONVERT])
