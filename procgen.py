@@ -72,7 +72,7 @@ class Matrix:
 
 		while amount:
 			if self.matrix[x][y] == Matrix.FILLED_POINT_TILE:
-				if amount == max_empty_tiles:
+				if amount == max_empty_tiles or count == 0:
 					self.matrix[x][y] = Matrix.CENTER_TILE
 				else:
 					self.matrix[x][y] = Matrix.EMPTY_POINT_TILE
