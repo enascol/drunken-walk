@@ -35,11 +35,11 @@ class Matrix:
 
 		if roll == 1 and x > Matrix.PADDING:
 			x -= 1
-		if roll == 2 and x < self.rows - Matrix.PADDING:
+		if roll == 2 and x < self.rows - 1 - Matrix.PADDING:
 			x += 1
 		if roll == 3 and y > Matrix.PADDING:
 			y -= 1
-		if roll == 4 and y < self.columns - Matrix.PADDING:
+		if roll == 4 and y < self.columns - 1 - Matrix.PADDING:
 			y += 1
 
 		return x, y
