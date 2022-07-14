@@ -2,6 +2,8 @@ import random
 import sys
 from PIL import Image
 import numpy as np
+import os, os.path
+import time
 
 class Matrix:
 	FILLED_POINT_TILE = "#"
@@ -82,6 +84,17 @@ class Matrix:
 	def get_random_color(self):
 		return random.randint(0, 250), random.randint(0, 250), random.randint(0, 250)
 
+	def save_image(self, image):
+		current_directory = os.getcwd()
+		directory_to_save = os.path.join(current_directory, "gend")
+
+		if not os.path.isdir(directory_to_save):
+			os.makedirs(directory_to_save)
+
+		image_path = os.path.join(directory_to_save, f"IMG {time.time()}.png")
+
+		image.save(image_path)
+		
 	def convert_to_img(self, path):
 		matrix = [[(255, 255, 255) for _ in range(self.columns)] for _ in range(self.rows)]
 
@@ -93,7 +106,7 @@ class Matrix:
 		matrix = np.asarray(matrix, dtype=np.uint8)
 		img = Image.fromarray(matrix)	
 
-		img.save(path)
+		self.save_image(img)
 
 def convert_string_to_settings(settings):
 	parsed_1 = [option.strip() for option in settings.split(",")]
