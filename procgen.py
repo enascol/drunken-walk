@@ -95,7 +95,7 @@ class Matrix:
 
 		image.save(image_path)
 		
-	def convert_to_img(self, path):
+	def convert_to_img(self):
 		matrix = [[(255, 255, 255) for _ in range(self.columns)] for _ in range(self.rows)]
 
 		for x in range(self.rows):
@@ -121,4 +121,3 @@ cave = Matrix(settings[ROWS], settings[COLUMNS])
 Matrix.MAX_WALK_BEFORE_JUMP = settings[JUMP_BEFORE_WALK]
 cave.generate(settings[MAX])
 cave.show()
-cave.convert_to_img("oii.png")
