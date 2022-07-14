@@ -5,9 +5,13 @@ import numpy as np
 import os, os.path
 import time
 
+ROWS, COLUMNS, MAX, JUMP_BEFORE_WALK, CONVERT = range(5)
+DEFAULT = [100, 100, 5000, 0, 0]
+
 class Matrix:
 	FILLED_POINT_TILE = "#"
 	EMPTY_POINT_TILE = " "
+	CENTER_TILE = "!"
 	PADDING = 2
 	MAX_WALK_BEFORE_JUMP = 0
 
@@ -67,7 +71,10 @@ class Matrix:
 
 		while amount:
 			if self.matrix[x][y] == Matrix.FILLED_POINT_TILE:
-				self.matrix[x][y] = Matrix.EMPTY_POINT_TILE
+				if amount == max_empty_tiles:
+					self.matrix[x][y] = Matrix.CENTER_TILE
+				else:
+					self.matrix[x][y] = Matrix.EMPTY_POINT_TILE
 				amount -= 1
 				count += 1
 
@@ -88,13 +95,14 @@ class Matrix:
 		return random.randint(0, 250), random.randint(0, 250), random.randint(0, 250)
 
 	def save_image(self, image):
-		current_directory = os.getcwd()
-		directory_to_save = os.path.join(current_directory, "gend")
+		base_path = os.path.split(sys.argv[0])[0]
+		directory_to_save = os.path.join(base_path, "gen")
 
 		if not os.path.isdir(directory_to_save):
 			os.makedirs(directory_to_save)
-
-		image_path = os.path.join(directory_to_save, f"IMG {time.time()}.png")
+		
+		name = f"IMG {time.time()}.png"
+		image_path = os.path.join(directory_to_save, "gend.png")
 
 		image.save(image_path)
 		
@@ -105,20 +113,25 @@ class Matrix:
 			for y in range(self.columns):
 				if self.matrix[x][y] == Matrix.EMPTY_POINT_TILE:
 					matrix[x][y] = (0, 0, 0)
+				
+				if self.matrix[x][y] == Matrix.CENTER_TILE:
+					matrix[x][y] = (252, 3, 61)
 		
 		matrix = np.asarray(matrix, dtype=np.uint8)
 		img = Image.fromarray(matrix)	
 
 		self.save_image(img)
 
-def convert_string_to_settings(settings):
-	parsed_1 = [option.strip() for option in settings.split(",")]
-	return dict([[x.strip() for x in option.split("=")] for option in parsed_1])
+def check_settings(settings):
+	l = len(settings)
+	for x in range(l, 5):
+		settings.append(DEFAULT[x])
+	
+	return settings
 
+settings = check_settings([int(x) for x in sys.argv[1:]])
+print(settings)
 
-ROWS, COLUMNS, MAX, JUMP_BEFORE_WALK, CONVERT = range(5)
-
-settings = [int(x) for x in sys.argv[1:]]
 cave = Matrix(settings[ROWS], settings[COLUMNS])
 Matrix.MAX_WALK_BEFORE_JUMP = settings[JUMP_BEFORE_WALK]
 cave.generate(settings[MAX], settings[CONVERT])
