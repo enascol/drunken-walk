@@ -6,7 +6,8 @@ import os, os.path
 import time
 
 ROWS, COLUMNS, MAX, JUMP_BEFORE_WALK, CONVERT = range(5)
-DEFAULT = [100, 100, 5000, 0, 0]
+DEFAULT = [100, 100, 0, 0, 1]
+DEFAULT[MAX] = int((DEFAULT[ROWS] * DEFAULT[COLUMNS]) / 2)
 
 class Matrix:
 	FILLED_POINT_TILE = "#"
