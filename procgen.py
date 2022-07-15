@@ -15,6 +15,7 @@ class Matrix:
 	CENTER_TILE = "!"
 	PADDING = 2
 	MAX_WALK_BEFORE_JUMP = 0
+	SYMBOLS = [f"S{x}" for x in range(100000)]
 
 	def __init__(self, rows =100, columns =300):
 		self.rows = rows
@@ -60,8 +61,10 @@ class Matrix:
 
 	def generate(self, max_empty_tiles, convert_to_image =False):
 		amount = max_empty_tiles
-		print(amount)
 		x, y = self.get_midway_position()
+
+		
+		symbol_count = 0
 
 		if Matrix.MAX_WALK_BEFORE_JUMP == 0:
 			max_walk = max_empty_tiles
@@ -75,13 +78,14 @@ class Matrix:
 				if amount == max_empty_tiles or count == 0:
 					self.matrix[x][y] = Matrix.CENTER_TILE
 				else:
-					self.matrix[x][y] = Matrix.EMPTY_POINT_TILE
+					self.matrix[x][y] = Matrix.SYMBOLS[symbol_count]
 				amount -= 1
 				count += 1
 
 			if count == max_walk:
 				x, y = self.get_random_position(tile_type=Matrix.FILLED_POINT_TILE)
 				count = 0
+				symbol_count += 1
 			else:
 				x, y = self.get_new_position(x, y)
 		
@@ -110,13 +114,21 @@ class Matrix:
 	def convert_to_img(self):
 		matrix = [[(255, 255, 255) for _ in range(self.columns)] for _ in range(self.rows)]
 
+		colors = {}
+
 		for x in range(self.rows):
 			for y in range(self.columns):
-				if self.matrix[x][y] == Matrix.EMPTY_POINT_TILE:
-					matrix[x][y] = (0, 0, 0)
-				
 				if self.matrix[x][y] == Matrix.CENTER_TILE:
 					matrix[x][y] = (252, 3, 61)
+				elif self.matrix[x][y] == Matrix.FILLED_POINT_TILE:
+					matrix[x][y] == (255, 255, 255)
+				else:
+					symbol = self.matrix[x][y]
+					try:
+						matrix[x][y] = colors[symbol]
+					except KeyError:
+						colors[symbol] = tuple([random.randint(0, 255) for _ in range(3)])
+						matrix[x][y] = colors[symbol]
 		
 		matrix = np.asarray(matrix, dtype=np.uint8)
 		img = Image.fromarray(matrix)	
