@@ -107,7 +107,7 @@ class Matrix:
 			os.makedirs(directory_to_save)
 		
 		name = f"IMG {time.time()}.png"
-		image_path = os.path.join(directory_to_save, "gend.png")
+		image_path = os.path.join(directory_to_save, name)
 
 		image.save(image_path)
 		
@@ -129,22 +129,30 @@ class Matrix:
 					except KeyError:
 						colors[symbol] = tuple([random.randint(0, 255) for _ in range(3)])
 						matrix[x][y] = colors[symbol]
-		
-		matrix = np.asarray(matrix, dtype=np.uint8)
-		img = Image.fromarray(matrix)	
-
+				
+		m = np.asarray(matrix, dtype=np.uint8)
+		img = Image.fromarray(m)	
 		self.save_image(img)
 
-def check_settings(settings):
-	l = len(settings)
-	for x in range(l, 5):
-		settings.append(DEFAULT[x])
+def parse_config_file():
+	config_path = os.path.join(os.path.split(sys.argv[0])[0], "config.cfg")
+	try:
+		config = [line for line in open(config_path, "r").readlines() if not line.isspace()]
+		settings = {}
+		for line in config:
+			pair = line.split("=")
+			key, value = pair[0].strip(), int(pair[1].strip())
+			settings[key] = value
+		
+		return settings
+	except FileNotFoundError:
+		print(f"[Error] Cant find config.cfg on {os.path.split(config_path)[0]}")
 	
-	return settings
+def start():
+	settings = parse_config_file()
 
-settings = check_settings([int(x) for x in sys.argv[1:]])
-print(settings)
+	cave = Matrix(settings["rows"], settings["columns"])
+	Matrix.MAX_WALK_BEFORE_JUMP = settings["max_pixels_emptied_before_jumping"]
+	cave.generate(settings["max_pixels_to_empty"], settings["convert_to_image"])
 
-cave = Matrix(settings[ROWS], settings[COLUMNS])
-Matrix.MAX_WALK_BEFORE_JUMP = settings[JUMP_BEFORE_WALK]
-cave.generate(settings[MAX], settings[CONVERT])
+start()
