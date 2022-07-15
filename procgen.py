@@ -5,10 +5,6 @@ import numpy as np
 import os, os.path
 import time
 
-ROWS, COLUMNS, MAX, JUMP_BEFORE_WALK, CONVERT = range(5)
-DEFAULT = [100, 100, 0, 0, 1]
-DEFAULT[MAX] = int((DEFAULT[ROWS] * DEFAULT[COLUMNS]) / 2)
-
 class Matrix:
 	FILLED_POINT_TILE = "#"
 	EMPTY_POINT_TILE = " "
@@ -16,6 +12,10 @@ class Matrix:
 	PADDING = 2
 	MAX_WALK_BEFORE_JUMP = 0
 	SYMBOLS = [f"S{x}" for x in range(100000)]
+	MONOCHROMATIC = 1
+	RED_CENTER = 1
+	RED_STARTING_GEN_POINT = 1
+	FIXED_WHITE_BACKGROUND = 1
 
 	def __init__(self, rows =100, columns =300):
 		self.rows = rows
@@ -63,7 +63,6 @@ class Matrix:
 		amount = max_empty_tiles
 		x, y = self.get_midway_position()
 
-		
 		symbol_count = 0
 
 		if Matrix.MAX_WALK_BEFORE_JUMP == 0:
@@ -75,10 +74,16 @@ class Matrix:
 
 		while amount:
 			if self.matrix[x][y] == Matrix.FILLED_POINT_TILE:
-				if amount == max_empty_tiles or count == 0:
+				if amount == max_empty_tiles:
+					if Matrix.RED_CENTER:
+						self.matrix[x][y] = Matrix.CENTER_TILE
+				elif count == 0 and Matrix.RED_STARTING_GEN_POINT:
 					self.matrix[x][y] = Matrix.CENTER_TILE
 				else:
-					self.matrix[x][y] = Matrix.SYMBOLS[symbol_count]
+					if Matrix.MONOCHROMATIC:
+						self.matrix[x][y] = Matrix.EMPTY_POINT_TILE
+					else:
+						self.matrix[x][y] = Matrix.SYMBOLS[symbol_count]
 				amount -= 1
 				count += 1
 
@@ -120,16 +125,20 @@ class Matrix:
 			for y in range(self.columns):
 				if self.matrix[x][y] == Matrix.CENTER_TILE:
 					matrix[x][y] = (252, 3, 61)
-				elif self.matrix[x][y] == Matrix.FILLED_POINT_TILE:
-					matrix[x][y] == (255, 255, 255)
 				else:
-					symbol = self.matrix[x][y]
-					try:
-						matrix[x][y] = colors[symbol]
-					except KeyError:
-						colors[symbol] = tuple([random.randint(0, 255) for _ in range(3)])
-						matrix[x][y] = colors[symbol]
-				
+					if self.matrix[x][y] == Matrix.EMPTY_POINT_TILE:
+						matrix[x][y] = (0, 0, 0)
+					else:
+						if self.matrix[x][y] == Matrix.FILLED_POINT_TILE and Matrix.FIXED_WHITE_BACKGROUND:
+							matrix[x][y] == (255, 255, 255)
+						else:
+							symbol = self.matrix[x][y]
+							try:
+								matrix[x][y] = colors[symbol]
+							except KeyError:
+								colors[symbol] = tuple([random.randint(0, 255) for _ in range(3)])
+								matrix[x][y] = colors[symbol]
+
 		m = np.asarray(matrix, dtype=np.uint8)
 		img = Image.fromarray(m)	
 		self.save_image(img)
@@ -153,6 +162,9 @@ def start():
 
 	cave = Matrix(settings["rows"], settings["columns"])
 	Matrix.MAX_WALK_BEFORE_JUMP = settings["max_pixels_emptied_before_jumping"]
+	Matrix.MONOCHROMATIC = settings["monochromatic"]
+	Matrix.RED_STARTING_GEN_POINT = settings["red_starting_gen_point"]
+	Matrix.RED_CENTER = settings["rede_center"]
 	cave.generate(settings["max_pixels_to_empty"], settings["convert_to_image"])
 
 start()
