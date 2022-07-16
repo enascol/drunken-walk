@@ -9,17 +9,12 @@ class Matrix:
 	FILLED_POINT_TILE = "#"
 	EMPTY_POINT_TILE = " "
 	CENTER_TILE = "!"
-	PADDING = 2
-	MAX_WALK_BEFORE_JUMP = 0
 	SYMBOLS = [f"S{x}" for x in range(100000)]
-	MONOCHROMATIC = 1
-	RED_CENTER = 1
-	RED_STARTING_GEN_POINT = 1
-	FIXED_WHITE_BACKGROUND = 1
-	CREATE_NEW_SAVE = 0
-	def __init__(self, rows =100, columns =300):
-		self.rows = rows
-		self.columns = columns
+
+	def __init__(self, settings):
+		self.settings = settings
+		self.rows = self.settings["rows"]
+		self.columns = self.settings["columns"]
 
 		self.matrix = self.generate_matrix()
 
@@ -34,24 +29,26 @@ class Matrix:
 
 		roll = random.randint(1, 4)
 
-		if roll == 1 and x > Matrix.PADDING:
+		if roll == 1 and x > self.settings["padding"]:
 			x -= 1
-		if roll == 2 and x < self.rows - 1 - Matrix.PADDING:
+		if roll == 2 and x < self.rows - 1 - self.settings["padding"]:
 			x += 1
-		if roll == 3 and y > Matrix.PADDING:
+		if roll == 3 and y > self.settings["padding"]:
 			y -= 1
-		if roll == 4 and y < self.columns - 1 - Matrix.PADDING:
+		if roll == 4 and y < self.columns - 1 - self.settings["padding"]:
 			y += 1
 
 		return x, y
 	
 	def get_random_position(self, tile_type =None):
 		if tile_type:
+			padding = self.settings["padding"]
+
 			while True:
 				x, y = self.get_random_position()
 				
-				x_not_on_padding = x > Matrix.PADDING and x < self.rows - Matrix.PADDING
-				y_not_on_padding = y > Matrix.PADDING and y < self.columns - Matrix.PADDING
+				x_not_on_padding = x > padding and x < self.rows - padding
+				y_not_on_padding = y > padding and y < self.columns - padding
 				match_correct_tile_type = self.matrix[x][y] == tile_type
 				
 				if x_not_on_padding and y_not_on_padding and match_correct_tile_type:
@@ -65,22 +62,22 @@ class Matrix:
 
 		symbol_count = 0
 
-		if Matrix.MAX_WALK_BEFORE_JUMP == 0:
+		if self.settings["max_pixels_emptied_before_jumping"] == 0:
 			max_walk = max_empty_tiles
 		else:
-			max_walk = Matrix.MAX_WALK_BEFORE_JUMP
+			max_walk = self.settings["max_pixels_emptied_before_jumping"]
 		
 		count = 0
 
 		while amount:
 			if self.matrix[x][y] == Matrix.FILLED_POINT_TILE:
 				if amount == max_empty_tiles:
-					if Matrix.RED_CENTER:
+					if self.settings["red_center"]:
 						self.matrix[x][y] = Matrix.CENTER_TILE
-				elif count == 0 and Matrix.RED_STARTING_GEN_POINT:
+				elif count == 0 and self.settings["red_starting_gen_point"]:
 					self.matrix[x][y] = Matrix.CENTER_TILE
 				else:
-					if Matrix.MONOCHROMATIC:
+					if self.settings["monochromatic"]:
 						self.matrix[x][y] = Matrix.EMPTY_POINT_TILE
 					else:
 						self.matrix[x][y] = Matrix.SYMBOLS[symbol_count]
@@ -111,7 +108,7 @@ class Matrix:
 		if not os.path.isdir(directory_to_save):
 			os.makedirs(directory_to_save)
 		
-		if Matrix.CREATE_NEW_SAVE:
+		if self.settings["create_new_file"]:
 			name = f"IMG {time.time()}.png"
 		else:
 			name = "gend.png"
@@ -121,6 +118,8 @@ class Matrix:
 		image.save(image_path)
 		
 	def convert_to_img(self):
+		fixed_white_background = self.settings["fixed_white_background"]
+
 		matrix = [[(255, 255, 255) for _ in range(self.columns)] for _ in range(self.rows)]
 
 		colors = {}
@@ -133,7 +132,7 @@ class Matrix:
 					if self.matrix[x][y] == Matrix.EMPTY_POINT_TILE:
 						matrix[x][y] = (0, 0, 0)
 					else:
-						if self.matrix[x][y] == Matrix.FILLED_POINT_TILE and Matrix.FIXED_WHITE_BACKGROUND:
+						if self.matrix[x][y] == Matrix.FILLED_POINT_TILE and fixed_white_background:
 							matrix[x][y] == (255, 255, 255)
 						else:
 							symbol = self.matrix[x][y]
@@ -159,18 +158,11 @@ def parse_config_file():
 		
 		return settings
 	except FileNotFoundError:
-		print(f"[Error] Cant find config.cfg on {os.path.split(config_path)[0]}")
+		print(f"[Error] Cant find config.cfg in path {os.path.split(config_path)[0]}")
 	
 def start():
 	settings = parse_config_file()
-
-	cave = Matrix(settings["rows"], settings["columns"])
-	Matrix.MAX_WALK_BEFORE_JUMP = settings["max_pixels_emptied_before_jumping"]
-	Matrix.MONOCHROMATIC = settings["monochromatic"]
-	Matrix.RED_STARTING_GEN_POINT = settings["red_starting_gen_point"]
-	Matrix.RED_CENTER = settings["red_center"]
-	Matrix.CREATE_NEW_SAVE = settings["create_new_save"]
-	Matrix.FIXED_WHITE_BACKGROUND = settings["fixed_white_background"]
+	cave = Matrix(settings)
 	cave.generate(settings["max_pixels_to_empty"], settings["convert_to_image"])
 
 start()
