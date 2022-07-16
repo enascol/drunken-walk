@@ -1,25 +1,40 @@
-import matrix
-
-import os, os.path
+""" Read and parse the config file to initialize the matrix """
+import os
+import os.path
 import sys
 
+import matrix
+
+
 def parse_config_file():
-	config_path = os.path.join(os.path.split(sys.argv[0])[0], "config.cfg")
-	try:
-		config = [line for line in open(config_path, "r").readlines() if not line.isspace()]
-		settings = {}
-		for line in config:
-			pair = line.split("=")
-			key, value = pair[0].strip(), int(pair[1].strip())
-			settings[key] = value
-		
-		return settings
-	except FileNotFoundError:
-		print(f"[Error] Cant find config.cfg in path {os.path.split(config_path)[0]}")
-	
+    """ Parse settings from config.cfg"""
+
+    config_path = os.path.join(os.path.split(sys.argv[0])[0], "config.cfg")
+    try:
+        config_file = open(config_path, "r").readlines()
+        config = [line for line in config_file if not line.isspace()]
+        settings = {}
+        for line in config:
+            pair = line.split("=")
+            key, value = pair[0].strip(), int(pair[1].strip())
+            settings[key] = value
+
+        return settings
+    except FileNotFoundError:
+        print("[Error] Cant find config.cfg")
+        raise
+
+
 def start():
-	settings = parse_config_file()
-	cave = matrix.Matrix(settings)
-	cave.generate(settings["max_pixels_to_empty"], settings["convert_to_image"])
+    """ Call Matrix() class passing settings"""
+
+    settings = parse_config_file()
+    cave = matrix.Matrix(settings)
+
+    max_pixels = settings["max_pixels_to_empty"]
+    convert = settings["convert_to_image"]
+
+    cave.generate(max_pixels, convert)
+
 
 start()

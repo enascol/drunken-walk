@@ -1,163 +1,236 @@
-from PIL import Image
+""" Module to generate and process matrix of characteres """
 
-import numpy as np
-import os, os.path
-import random
+import os
+import os.path
 import sys
+import random
 import time
 
+from PIL import Image
+import numpy as np
+
+
 class Matrix:
-	FILLED_POINT_TILE = "#"
-	EMPTY_POINT_TILE = " "
-	CENTER_TILE = "!"
-	SYMBOLS = [f"S{x}" for x in range(100000)]
+    """ Generates a matrix that can be converted to a .png file.
 
-	def __init__(self, settings):
-		self.settings = settings
-		self.rows = self.settings["rows"]
-		self.columns = self.settings["columns"]
+    The matrix will be  generated with the dimensions specified
+    on the config file.
 
-		self.matrix = self.generate_matrix()
+    Example:
+        - Matrix with 3 rows and 5 columns before being processed
 
-	def generate_matrix(self):
-		print("Initializing matrix...", end =" ")
-		start = time.time()
-		matrix = [[Matrix.FILLED_POINT_TILE] * self.columns for _ in range(self.rows)]
-		print(f"done in {time.time() - start} seconds")
-		return matrix
-	
-	def get_midway_position(self):
-		return int(self.rows / 2), int(self.columns / 2)
-	
-	def get_new_position(self, current_x, current_y):
-		x, y = current_x, current_y
+        #####
+        #####
+        #####
+    """
+    FILLED_POINT_TILE = "#"
+    EMPTY_POINT_TILE = " "
+    CENTER_TILE = "!"
+    SYMBOLS = [f"S{x}" for x in range(100000)]
 
-		roll = random.randint(1, 4)
+    def __init__(self, settings):
+        self.settings = settings
+        self.rows = self.settings["rows"]
+        self.columns = self.settings["columns"]
 
-		if roll == 1 and x > self.settings["padding"]:
-			x -= 1
-		if roll == 2 and x < self.rows - 1 - self.settings["padding"]:
-			x += 1
-		if roll == 3 and y > self.settings["padding"]:
-			y -= 1
-		if roll == 4 and y < self.columns - 1 - self.settings["padding"]:
-			y += 1
+        self.matrix = self.initialize_matrix()
 
-		return x, y
-	
-	def get_random_position(self, tile_type =None):
-		if tile_type:
-			padding = self.settings["padding"]
+    def initialize_matrix(self):
+        """ Initialize the matrix with the given dimension"""
 
-			while True:
-				x, y = self.get_random_position()
-				
-				x_not_on_padding = x > padding and x < self.rows - padding
-				y_not_on_padding = y > padding and y < self.columns - padding
-				match_correct_tile_type = self.matrix[x][y] == tile_type
-				
-				if x_not_on_padding and y_not_on_padding and match_correct_tile_type:
-					return x, y
-		else:
-			return random.randint(0, self.rows - 1), random.randint(0, self.columns -1)
+        print("Initializing matrix...", end=" ")
+        start = time.time()
 
-	def generate(self, max_empty_tiles, convert_to_image =False):
-		print("Generating characters...", end =" ")
-		start = time.time()
-		amount = max_empty_tiles
+        filled = [Matrix.FILLED_POINT_TILE]
+        matrix = [filled * self.columns for _ in range(self.rows)]
 
-		if self.settings["start_from_center"]:
-			x, y = self.get_midway_position()
-		else:
-			x, y = self.get_random_position(tile_type=Matrix.FILLED_POINT_TILE)
+        print(f"done in {time.time() - start} seconds")
+        return matrix
 
-		symbol_count = 0
+    def get_midway_position(self):
+        """ Get the coordinations of the middle point of the matrix """
 
-		if self.settings["max_pixels_emptied_before_jumping"] == 0:
-			max_walk = max_empty_tiles
-		else:
-			max_walk = self.settings["max_pixels_emptied_before_jumping"]
-		
-		count = 0
+        return int(self.rows / 2), int(self.columns / 2)
 
-		while amount:
-			if self.matrix[x][y] == Matrix.FILLED_POINT_TILE:
-				if amount == max_empty_tiles:
-					if self.settings["red_center"]:
-						self.matrix[x][y] = Matrix.CENTER_TILE
-				elif count == 0 and self.settings["red_starting_gen_point"]:
-					self.matrix[x][y] = Matrix.CENTER_TILE
-				else:
-					if self.settings["monochromatic"]:
-						self.matrix[x][y] = Matrix.EMPTY_POINT_TILE
-					else:
-						self.matrix[x][y] = Matrix.SYMBOLS[symbol_count]
-				amount -= 1
-				count += 1
+    def get_new_position(self, current_x, current_y):
+        """ Gets new coords based on the given ones """
 
-			if count == max_walk:
-				x, y = self.get_random_position(tile_type=Matrix.FILLED_POINT_TILE)
-				count = 0
-				symbol_count += 1
-			else:
-				x, y = self.get_new_position(x, y)
-		print(f"done in {time.time() - start} seconds")
-		if convert_to_image:
-			self.convert_to_img()
-		
+        new_x, new_y = current_x, current_y
+        rows, columns = self.rows, self.columns
+        roll = random.randint(1, 4)
 
-	def show(self):
-		for row in self.matrix:
-			print("".join(row))
-	
-	def get_random_color(self):
-		return random.randint(0, 250), random.randint(0, 250), random.randint(0, 250)
+        if roll == 1 and current_x > self.settings["padding"]:
+            new_x -= 1
+        if roll == 2 and current_x < rows - 1 - self.settings["padding"]:
+            new_x += 1
+        if roll == 3 and current_y > self.settings["padding"]:
+            new_y -= 1
+        if roll == 4 and current_y < columns - 1 - self.settings["padding"]:
+            new_y += 1
 
-	def save_image(self, image):
-		base_path = os.path.split(sys.argv[0])[0]
-		directory_to_save = os.path.join(base_path, "gen")
+        return new_x, new_y
 
-		if not os.path.isdir(directory_to_save):
-			os.makedirs(directory_to_save)
-		
-		if self.settings["create_new_file"]:
-			name = f"IMG {time.time()}.png"
-		else:
-			name = "gend.png"
+    def get_random_position(self, tile_type=None):
+        """ Gets a random coordinate.
 
-		image_path = os.path.join(directory_to_save, name)
+        if a tile_type is passed then the coordinate
+        must have a match character.
+        """
 
-		image.save(image_path)
-		
-	def convert_to_img(self):
-		print("Generating colored matrix", end =" ")
-		start = time.time()
-		fixed_white_background = self.settings["fixed_white_background"]
+        if tile_type:
+            pad = self.settings["padding"]
 
-		matrix = [[(255, 255, 255) for _ in range(self.columns)] for _ in range(self.rows)]
+            while True:
+                rand_x, rand_y = self.get_random_position()
+                current_tile = self.matrix[rand_x][rand_y]
 
-		colors = {}
+                x_not_padding = rand_x > pad and rand_x < self.rows - pad
+                y_not_padding = rand_y > pad and rand_y < self.columns - pad
+                match_correct_tile_type = current_tile == tile_type
 
-		for x in range(self.rows):
-			for y in range(self.columns):
-				if self.matrix[x][y] == Matrix.CENTER_TILE:
-					matrix[x][y] = (252, 3, 61)
-				else:
-					if self.matrix[x][y] == Matrix.EMPTY_POINT_TILE:
-						matrix[x][y] = (0, 0, 0)
-					else:
-						if self.matrix[x][y] == Matrix.FILLED_POINT_TILE and fixed_white_background:
-							matrix[x][y] == (255, 255, 255)
-						else:
-							symbol = self.matrix[x][y]
-							try:
-								matrix[x][y] = colors[symbol]
-							except KeyError:
-								colors[symbol] = tuple([random.randint(0, 255) for _ in range(3)])
-								matrix[x][y] = colors[symbol]
+                if x_not_padding and y_not_padding and match_correct_tile_type:
+                    return rand_x, rand_y
+        else:
+            rand_x = random.randint(0, self.rows - 1)
+            rand_y = random.randint(0, self.columns - 1)
 
-		m = np.asarray(matrix, dtype=np.uint8)
-		img = Image.fromarray(m)	
-		self.save_image(img)
+            return rand_x, rand_y
 
-		print(f"done in {time.time() - start} seconds")
+    def generate(self, max_empty_tiles, convert_to_image=False):
+        """Generates all the possible tiles(characters) in the matrix
+
+        These characteres are:
+            - # : filled tile
+            - ' ' : empty tile
+            - ! : center tile
+            - 'S1', 'S2', 'S3', etc : color tiles
+        """
+
+        print("Generating characters...", end=" ")
+        start = time.time()
+        amount = max_empty_tiles
+
+        if self.settings["start_from_center"]:
+            current_x, current_y = self.get_midway_position()
+        else:
+            tile_type = Matrix.FILLED_POINT_TILE
+            current_x, current_y = self.get_random_position(tile_type)
+
+        symbol_count = 0
+
+        if self.settings["max_pixels_emptied_before_jumping"] == 0:
+            max_walk = max_empty_tiles
+        else:
+            max_walk = self.settings["max_pixels_emptied_before_jumping"]
+
+        count = 0
+
+        while amount:
+            if self.matrix[current_x][current_y] == Matrix.FILLED_POINT_TILE:
+                if amount == max_empty_tiles and self.settings["red_center"]:
+                    self.matrix[current_x][current_y] = Matrix.CENTER_TILE
+                elif count == 0 and self.settings["red_starting_gen_point"]:
+                    self.matrix[current_x][current_y] = Matrix.CENTER_TILE
+                else:
+                    if self.settings["monochromatic"]:
+                        empty_tile = Matrix.EMPTY_POINT_TILE
+                        self.matrix[current_x][current_y] = empty_tile
+                    else:
+                        symbol = Matrix.SYMBOLS[symbol_count]
+                        self.matrix[current_x][current_y] = symbol
+                amount -= 1
+                count += 1
+
+            if count == max_walk:
+                tile_type = Matrix.FILLED_POINT_TILE
+                current_x, current_y = self.get_random_position(tile_type)
+
+                count = 0
+                symbol_count += 1
+            else:
+                new_coord = self.get_new_position(current_x, current_y)
+                current_x, current_y = new_coord
+
+        print(f"done in {time.time() - start} seconds")
+        if convert_to_image:
+            self.convert_to_img()
+
+    def show(self):
+        """ Print the matrix """
+        for row in self.matrix:
+            print("".join(row))
+
+    def get_random_color(self):
+        """ Gets a random RGB value """
+        return [random.randint(0, 250) for _ in range(3)]
+
+    def save_image(self, image):
+        """ Saves the image generated from the matrix.
+
+        Saves the image to the gen folder created in the
+        directory where this script is being ran.
+
+        If "create_new_file" is set to 0 then tbe image
+        will be saved to the same file instead of creating
+        a new one.
+        """
+        base_path = os.path.split(sys.argv[0])[0]
+        directory_to_save = os.path.join(base_path, "gen")
+
+        if not os.path.isdir(directory_to_save):
+            os.makedirs(directory_to_save)
+
+        if self.settings["create_new_file"]:
+            name = f"IMG {time.time()}.png"
+        else:
+            name = "gend.png"
+
+        image_path = os.path.join(directory_to_save, name)
+
+        image.save(image_path)
+
+    def _generate_color_grid(self):
+        columns = range(self.columns)
+        rows = range(self.rows)
+        black = (255, 255, 255)
+
+        grid = [[black for _ in columns] for _ in rows]
+
+        return grid
+
+    def convert_to_img(self):
+        """ Converts the previously generated matrix to a png file """
+
+        print("Generating colored matrix", end=" ")
+
+        start = time.time()
+        fixed_bg = self.settings["fixed_white_background"]
+
+        matrix = self._generate_color_grid()
+
+        colors = {}
+
+        for x in range(self.rows):
+            for y in range(self.columns):
+                if self.matrix[x][y] == Matrix.CENTER_TILE:
+                    matrix[x][y] = (252, 3, 61)
+                else:
+                    if self.matrix[x][y] == Matrix.EMPTY_POINT_TILE:
+                        matrix[x][y] = (0, 0, 0)
+                    else:
+                        filled_tile = Matrix.FILLED_POINT_TILE
+                        if self.matrix[x][y] == filled_tile and fixed_bg:
+                            matrix[x][y] == (255, 255, 255)
+                        else:
+                            symbol = self.matrix[x][y]
+                            try:
+                                matrix[x][y] = colors[symbol]
+                            except KeyError:
+                                colors[symbol] = self.get_random_color()
+                                matrix[x][y] = colors[symbol]
+
+        numpy_matrix = np.asarray(matrix, dtype=np.uint8)
+        img = Image.fromarray(numpy_matrix)
+        self.save_image(img)
+
+        print(f"done in {time.time() - start} seconds")
