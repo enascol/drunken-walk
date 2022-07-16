@@ -19,7 +19,11 @@ class Matrix:
 		self.matrix = self.generate_matrix()
 
 	def generate_matrix(self):
-		return [[Matrix.FILLED_POINT_TILE] * self.columns for _ in range(self.rows)]
+		print("Initializing matrix...", end =" ")
+		start = time.time()
+		matrix = [[Matrix.FILLED_POINT_TILE] * self.columns for _ in range(self.rows)]
+		print(f"done in {time.time() - start} seconds")
+		return matrix
 	
 	def get_midway_position(self):
 		return int(self.rows / 2), int(self.columns / 2)
@@ -57,6 +61,8 @@ class Matrix:
 			return random.randint(0, self.rows - 1), random.randint(0, self.columns -1)
 
 	def generate(self, max_empty_tiles, convert_to_image =False):
+		print("Generating characters...", end =" ")
+		start = time.time()
 		amount = max_empty_tiles
 
 		if self.settings["start_from_center"]:
@@ -94,9 +100,10 @@ class Matrix:
 				symbol_count += 1
 			else:
 				x, y = self.get_new_position(x, y)
-		
+		print(f"done in {time.time() - start} seconds")
 		if convert_to_image:
 			self.convert_to_img()
+		
 
 	def show(self):
 		for row in self.matrix:
@@ -122,6 +129,8 @@ class Matrix:
 		image.save(image_path)
 		
 	def convert_to_img(self):
+		print("Generating colored matrix", end =" ")
+		start = time.time()
 		fixed_white_background = self.settings["fixed_white_background"]
 
 		matrix = [[(255, 255, 255) for _ in range(self.columns)] for _ in range(self.rows)]
@@ -149,6 +158,8 @@ class Matrix:
 		m = np.asarray(matrix, dtype=np.uint8)
 		img = Image.fromarray(m)	
 		self.save_image(img)
+
+		print(f"done in {time.time() - start} seconds")
 
 def parse_config_file():
 	config_path = os.path.join(os.path.split(sys.argv[0])[0], "config.cfg")
