@@ -4,6 +4,7 @@ import os.path
 import sys
 
 import matrix
+import settings as _set
 
 
 def parse_config_file():
@@ -27,6 +28,8 @@ def parse_config_file():
 
 def start():
     """ Call Matrix() class passing settings"""
+
+    _set.set_config(sys.argv)
 
     settings = parse_config_file()
     cave = matrix.Matrix(settings)
