@@ -58,7 +58,11 @@ class Matrix:
 
 	def generate(self, max_empty_tiles, convert_to_image =False):
 		amount = max_empty_tiles
-		x, y = self.get_midway_position()
+
+		if self.settings["start_from_center"]:
+			x, y = self.get_midway_position()
+		else:
+			x, y = self.get_random_position(tile_type=Matrix.FILLED_POINT_TILE)
 
 		symbol_count = 0
 
