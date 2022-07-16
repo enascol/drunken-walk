@@ -16,7 +16,7 @@ class Matrix:
 	RED_CENTER = 1
 	RED_STARTING_GEN_POINT = 1
 	FIXED_WHITE_BACKGROUND = 1
-
+	CREATE_NEW_SAVE = 0
 	def __init__(self, rows =100, columns =300):
 		self.rows = rows
 		self.columns = columns
@@ -111,7 +111,11 @@ class Matrix:
 		if not os.path.isdir(directory_to_save):
 			os.makedirs(directory_to_save)
 		
-		name = f"IMG {time.time()}.png"
+		if Matrix.CREATE_NEW_SAVE:
+			name = f"IMG {time.time()}.png"
+		else:
+			name = "gend.png"
+
 		image_path = os.path.join(directory_to_save, name)
 
 		image.save(image_path)
@@ -164,7 +168,9 @@ def start():
 	Matrix.MAX_WALK_BEFORE_JUMP = settings["max_pixels_emptied_before_jumping"]
 	Matrix.MONOCHROMATIC = settings["monochromatic"]
 	Matrix.RED_STARTING_GEN_POINT = settings["red_starting_gen_point"]
-	Matrix.RED_CENTER = settings["rede_center"]
+	Matrix.RED_CENTER = settings["red_center"]
+	Matrix.CREATE_NEW_SAVE = settings["create_new_save"]
+	Matrix.FIXED_WHITE_BACKGROUND = settings["fixed_white_background"]
 	cave.generate(settings["max_pixels_to_empty"], settings["convert_to_image"])
 
 start()
