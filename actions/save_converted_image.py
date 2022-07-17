@@ -13,18 +13,21 @@ import os.path
 
 import time
 
+ORIGIN = __file__.rsplit('\\', maxsplit=1)[-1]
 
 def execute(image, path, create_new_file=False):
-    print(f"Saving image to {path}")
+    print(f"[{ORIGIN}] Saving image...")
 
     if not os.path.isdir(path):
         os.makedirs(path)
 
     if create_new_file:
-        name = f"IMG {time.time()}.png"
+        name = f"IMG{time.time()}.png"
     else:
         name = "gend.png"
 
     image_path = os.path.join(path, name)
     image.save(image_path)
+
+    print(f"[{ORIGIN}] Saved to {image_path}")
 

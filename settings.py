@@ -2,6 +2,7 @@
 
 import paths
 
+ORIGIN = __file__.rsplit('\\', maxsplit=1)[-1]
 
 def set_config(args):
     """ Changes configuration file based on arguments passed to the script """
@@ -11,7 +12,7 @@ def set_config(args):
         settings = _get_new_settings(args)
         _write_to_config(settings)
     except IndexError as error:
-        print(error)
+        print(F"[{ORIGIN}] No args passed to script, using config file as it is")
     except FileNotFoundError as error:
         print(error)
 
@@ -31,7 +32,7 @@ def _parse_config_file():
     try:
         configs = open(paths.CONFIG_PATH, "r").readlines()
     except FileNotFoundError:
-        raise FileNotFoundError("[Error] CONFIG.CFG NOT FOUND")
+        raise FileNotFoundError(f"[{ORIGIN}] CONFIG.CFG NOT FOUND")
 
     settings_pair = []
 
@@ -70,6 +71,6 @@ def _get_new_settings(args):
         if key in config_settings:
             config_settings[key] = value
         else:
-            print(f"[Warning] UNKNOWN OPTION {key}. IGNORED.")
+            print(f"[{ORIGIN}] UNKNOWN OPTION {key}. IGNORED.")
 
     return _convert_settings_to_string(config_settings)

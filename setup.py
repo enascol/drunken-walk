@@ -6,6 +6,7 @@ import sys
 import matrix
 import settings as _set
 
+ORIGIN = __file__.rsplit('\\', maxsplit=1)[-1]
 
 def parse_config_file():
     """ Parse settings from config.cfg"""
@@ -22,7 +23,7 @@ def parse_config_file():
 
         return settings
     except FileNotFoundError:
-        print("[Error] Cant find config.cfg")
+        print(f"[{ORIGIN}] Cant find config.cfg")
         raise
 
 

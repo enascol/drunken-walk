@@ -5,9 +5,10 @@ import os.path
 
 import time
 
+ORIGIN = __file__.rsplit('\\', maxsplit=1)[-1]
 
 def execute(matrix, path):
-    print(f"Saving matrix to {path}")
+    print(f"[{ORIGIN}] Saving matrix to {path}")
 
     if not os.path.isdir(path):
         os.makedirs(path)

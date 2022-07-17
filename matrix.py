@@ -14,6 +14,7 @@ import paths
 from actions import save_matrix
 from actions import save_converted_image
 
+ORIGIN = __file__.rsplit('\\', maxsplit=1)[-1]
 
 class Matrix:
     """ Generates a matrix that can be converted to a .png file.
@@ -53,7 +54,7 @@ class Matrix:
     def initialize_matrix(self):
         """ Initialize the matrix with the given dimension"""
 
-        print("Initializing matrix...", end=" ")
+        print(f"[{ORIGIN}] Initializing matrix...", end=" ")
         start = time.time()
 
         filled = [Matrix.FILLED_POINT_TILE]
@@ -121,7 +122,7 @@ class Matrix:
             - 'S1', 'S2', 'S3', etc : color tiles
         """
 
-        print("Generating characters...", end=" ")
+        print(f"[{ORIGIN}] Generating characters...", end=" ")
         start = time.time()
         amount = max_empty_tiles
 
@@ -206,7 +207,7 @@ class Matrix:
     def convert_to_img(self):
         """ Converts the previously generated matrix to a png file """
 
-        print("Generating colored matrix", end=" ")
+        print(f"[{ORIGIN}] Generating colored matrix", end=" ")
 
         start = time.time()
         fixed_bg = self.settings["fixed_bg"]
