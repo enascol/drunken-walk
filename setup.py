@@ -6,6 +6,8 @@ import sys
 import matrix
 import settings as _set
 
+from actions import analyze_settings as als
+
 ORIGIN = __file__.rsplit('\\', maxsplit=1)[-1]
 
 def parse_config_file():
@@ -33,6 +35,7 @@ def start():
     _set.set_config(sys.argv)
 
     settings = parse_config_file()
+    settings = als.execute(settings)
     cave = matrix.Matrix(settings)
 
     max_pixels = settings["max_pixels"]
