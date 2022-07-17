@@ -9,6 +9,8 @@ import time
 from PIL import Image
 import numpy as np
 
+import paths
+
 
 class Matrix:
     """ Generates a matrix that can be converted to a .png file.
@@ -26,6 +28,7 @@ class Matrix:
     FILLED_POINT_TILE = "#"
     EMPTY_POINT_TILE = " "
     CENTER_TILE = "!"
+    FILLED_PIXELS_PER_JUMP = 0
     SYMBOLS = [f"S{x}" for x in range(100000)]
 
     def __init__(self, settings):
@@ -33,7 +36,15 @@ class Matrix:
         self.rows = self.settings["rows"]
         self.columns = self.settings["columns"]
 
+        self._set_pixels_per_jump()
+
         self.matrix = self.initialize_matrix()
+
+    def _set_pixels_per_jump(self):
+        max_pixels = self.settings["max_pixels"]
+        jumps = self.settings["jumps"]
+
+        Matrix.FILLED_PIXELS_PER_JUMP = int(max_pixels / jumps)
 
     def initialize_matrix(self):
         """ Initialize the matrix with the given dimension"""
@@ -118,18 +129,20 @@ class Matrix:
 
         symbol_count = 0
 
-        if self.settings["max_pixels_emptied_before_jumping"] == 0:
+        if Matrix.FILLED_PIXELS_PER_JUMP == 0:
             max_walk = max_empty_tiles
         else:
-            max_walk = self.settings["max_pixels_emptied_before_jumping"]
+            max_walk = Matrix.FILLED_PIXELS_PER_JUMP
 
         count = 0
 
         while amount:
             if self.matrix[current_x][current_y] == Matrix.FILLED_POINT_TILE:
-                if amount == max_empty_tiles and self.settings["red_center"]:
+                red_gen_start = self.settings["red_gen_start"]
+
+                if amount == max_empty_tiles and red_gen_start:
                     self.matrix[current_x][current_y] = Matrix.CENTER_TILE
-                elif count == 0 and self.settings["red_starting_gen_point"]:
+                elif count == 0 and self.settings["red_gen_start"]:
                     self.matrix[current_x][current_y] = Matrix.CENTER_TILE
                 else:
                     if self.settings["monochromatic"]:
@@ -154,6 +167,9 @@ class Matrix:
         print(f"done in {time.time() - start} seconds")
         if convert_to_image:
             self.convert_to_img()
+
+        if self.settings["save_matrix"]:
+            self._save_matrix()
 
     def show(self):
         """ Print the matrix """
@@ -189,6 +205,25 @@ class Matrix:
 
         image.save(image_path)
 
+    def _save_matrix(self):
+        matrixes_path = paths.MATRIXES_PATH
+
+        if not os.path.isdir(matrixes_path):
+            os.makedirs(matrixes_path)
+
+        matrix_string = []
+
+        for row in self.matrix:
+            matrix_string.append("".join(row))
+
+        matrix_string = "\n".join(matrix_string)
+
+        matrix_name = f"M{time.time()}"
+        matrix_path = os.path.join(matrixes_path, matrix_name)
+
+        with open(matrix_path, "w+") as mf:
+            mf.write(matrix_string)
+
     def _generate_color_grid(self):
         columns = range(self.columns)
         rows = range(self.rows)
@@ -204,7 +239,7 @@ class Matrix:
         print("Generating colored matrix", end=" ")
 
         start = time.time()
-        fixed_bg = self.settings["fixed_white_background"]
+        fixed_bg = self.settings["fixed_bg"]
 
         matrix = self._generate_color_grid()
 

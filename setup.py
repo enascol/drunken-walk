@@ -34,7 +34,7 @@ def start():
     settings = parse_config_file()
     cave = matrix.Matrix(settings)
 
-    max_pixels = settings["max_pixels_to_empty"]
+    max_pixels = settings["max_pixels"]
     convert = settings["convert_to_image"]
 
     cave.generate(max_pixels, convert)

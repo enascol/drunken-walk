@@ -1,10 +1,6 @@
 """ Module to parse option passed when running the setup script. """
-import os
-import os.path
 
-CWD = os.getcwd()
-CONFIG_PATH = os.path.join(CWD, "config.cfg")
-
+import paths
 
 def set_config(args):
     """ Changes configuration file based on arguments passed to the script """
@@ -34,14 +30,17 @@ def _parse_args(args):
 
 def _parse_config_file():
     try:
-        configs = open(CONFIG_PATH, "r").readlines()
+        configs = open(paths.CONFIG_PATH, "r").readlines()
     except FileNotFoundError:
-        raise FileNotFoundError("config.cfg not found")
+        raise FileNotFoundError("[Error] CONFIG.CFG NOT FOUND")
 
     settings_pair = []
 
     for setting in configs:
-        if not setting.isspace():
+        not_empty_line = not setting.isspace()
+        not_a_comment = setting[0][0] != "#"
+
+        if not_a_comment and not_empty_line:
             setting = setting.strip()
             pair = [item.strip() for item in setting.split("=")]
             settings_pair.append(pair)
@@ -50,7 +49,7 @@ def _parse_config_file():
 
 
 def _write_to_config(settings):
-    with open(CONFIG_PATH, "w") as config_file:
+    with open(paths.CONFIG_PATH, "w") as config_file:
         config_file.write(settings)
 
 
@@ -72,6 +71,6 @@ def _get_new_settings(args):
         if key in config_settings:
             config_settings[key] = value
         else:
-            print(f"unknown option {key}, ignoring.")
+            print(f"[Warning] UNKNOWN OPTION {key}. IGNORED.")
 
     return _convert_settings_to_string(config_settings)
