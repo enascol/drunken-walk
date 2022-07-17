@@ -2,6 +2,7 @@
 
 import paths
 
+
 def set_config(args):
     """ Changes configuration file based on arguments passed to the script """
 
@@ -18,9 +19,7 @@ def set_config(args):
 def _parse_args(args):
     pairs = [
         [p.strip() for p in pair.split("=")]
-        for pair in [
-            setting.strip() for setting in args.split(",")
-        ]
+        for pair in [setting.strip() for setting in args.split(",")]
     ]
 
     new_settings = {key: value for key, value in pairs}

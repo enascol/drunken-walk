@@ -11,6 +11,9 @@ import numpy as np
 
 import paths
 
+from actions import save_matrix
+from actions import save_converted_image
+
 
 class Matrix:
     """ Generates a matrix that can be converted to a .png file.
@@ -25,6 +28,7 @@ class Matrix:
         #####
         #####
     """
+
     FILLED_POINT_TILE = "#"
     EMPTY_POINT_TILE = " "
     CENTER_TILE = "!"
@@ -165,6 +169,7 @@ class Matrix:
                 current_x, current_y = new_coord
 
         print(f"done in {time.time() - start} seconds")
+
         if convert_to_image:
             self.convert_to_img()
 
@@ -180,49 +185,14 @@ class Matrix:
         """ Gets a random RGB value """
         return [random.randint(0, 250) for _ in range(3)]
 
-    def save_image(self, image):
-        """ Saves the image generated from the matrix.
+    def _save_image(self, image):
+        path = paths.GEN_PATH
+        create_new_file = self.settings["create_new_file"]
 
-        Saves the image to the gen folder created in the
-        directory where this script is being ran.
-
-        If "create_new_file" is set to 0 then tbe image
-        will be saved to the same file instead of creating
-        a new one.
-        """
-        base_path = os.path.split(sys.argv[0])[0]
-        directory_to_save = os.path.join(base_path, "gen")
-
-        if not os.path.isdir(directory_to_save):
-            os.makedirs(directory_to_save)
-
-        if self.settings["create_new_file"]:
-            name = f"IMG {time.time()}.png"
-        else:
-            name = "gend.png"
-
-        image_path = os.path.join(directory_to_save, name)
-
-        image.save(image_path)
+        save_converted_image.execute(image, path, create_new_file)
 
     def _save_matrix(self):
-        matrixes_path = paths.MATRIXES_PATH
-
-        if not os.path.isdir(matrixes_path):
-            os.makedirs(matrixes_path)
-
-        matrix_string = []
-
-        for row in self.matrix:
-            matrix_string.append("".join(row))
-
-        matrix_string = "\n".join(matrix_string)
-
-        matrix_name = f"M{time.time()}"
-        matrix_path = os.path.join(matrixes_path, matrix_name)
-
-        with open(matrix_path, "w+") as mf:
-            mf.write(matrix_string)
+        save_matrix.execute(self.matrix, paths.MATRIXES_PATH)
 
     def _generate_color_grid(self):
         columns = range(self.columns)
@@ -266,6 +236,7 @@ class Matrix:
 
         numpy_matrix = np.asarray(matrix, dtype=np.uint8)
         img = Image.fromarray(numpy_matrix)
-        self.save_image(img)
 
         print(f"done in {time.time() - start} seconds")
+
+        self._save_image(img)
